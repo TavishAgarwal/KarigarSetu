@@ -1,0 +1,209 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("artisan") // artisan | buyer
+  createdAt DateTime @default(now())
+
+  artisanProfile ArtisanProfile?
+}
+
+model ArtisanProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+
+  craftType            String
+  craftSpecialization  String?
+  materialsUsed        String?
+  techniquesUsed       String?
+
+  location        String
+  state           String   @default("")
+  district        String   @default("")
+  pincode         String?
+
+  experienceYears Int
+
+  productionCapacity  Int?
+  workshopSize        Int?
+  acceptsBulkOrders   Boolean @default(false)
+
+  shipsDomestic       Boolean @default(true)
+  shipsInternational  Boolean @default(false)
+
+  bio             String
+  profileImage    String?
+
+  bankAccount     String?
+  ifscCode        String?
+  upiId           String?
+
+  verificationStatus String @default("unverified")
+
+  createdAt       DateTime @default(now())
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  products Product[]
+  productionInsights ProductionInsight[]
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  artisanId   String
+  title       String
+  description String
+  story       String?
+  price       Float
+  category    String
+  tags        String   @default("[]") // JSON array stored as string
+  imageUrl    String
+  stock       Int      @default(1)
+  createdAt   DateTime @default(now())
+
+  artisan         ArtisanProfile  @relation(fields: [artisanId], references: [id], onDelete: Cascade)
+  craftStory      CraftStory?
+  craftProvenance  CraftProvenance?
+  craftAuthenticity CraftAuthenticity?
+  artisanImpact   ArtisanImpact?
+  orderItems      OrderItem[]
+}
+
+model CraftStory {
+  id               String   @id @default(cuid())
+  productId        String   @unique
+  craftStory       String
+  craftHistory     String
+  artisanJourney   String
+  culturalSymbolism String
+  createdAt        DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model CraftProvenance {
+  id                    String   @id @default(cuid())
+  productId             String   @unique
+  craftOrigin           String
+  traditionalTechnique  String
+  culturalSignificance  String
+  authenticityScore     Float
+  verificationSummary   String
+  createdAt             DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model CraftTrendInsight {
+  id                String   @id @default(cuid())
+  craftType         String
+  trendSummary      String
+  recommendedStyles String   // JSON array stored as string
+  recommendedColors String   // JSON array stored as string
+  targetMarkets     String   // JSON array stored as string
+  createdAt         DateTime @default(now())
+}
+
+// ─── Order Management ───
+// OrderStatus values: PENDING, CONFIRMED, PROCESSING, SHIPPED, DELIVERED, CANCELLED
+// (SQLite does not support enums, so we use String with app-level validation)
+
+model Order {
+  id          String   @id @default(cuid())
+  buyerId     String
+  artisanId   String
+  totalAmount Float
+  status      String   @default("PENDING")
+  buyerName   String   @default("")
+  buyerAddress String  @default("")
+  buyerPhone  String   @default("")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  items OrderItem[]
+}
+
+model OrderItem {
+  id        String @id @default(cuid())
+  orderId   String
+  productId String
+  quantity  Int
+  price     Float
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+}
+
+model PriceInsight {
+  id              String   @id @default(cuid())
+  productId       String?
+  craftType       String
+  recommendedPrice Float
+  priceRangeMin   Float
+  priceRangeMax   Float
+  globalAverage   Float
+  demandLevel     String
+  targetMarkets   String   // JSON array stored as string
+  reasoning       String
+  createdAt       DateTime @default(now())
+}
+
+model CraftDemandInsight {
+  id              String   @id @default(cuid())
+  craftType       String
+  region          String
+  country         String
+  demandLevel     String
+  popularStyles   String   // JSON array
+  popularColors   String   // JSON array
+  avgPrice        Float
+  createdAt       DateTime @default(now())
+}
+
+model CraftAuthenticity {
+  id                  String   @id @default(cuid())
+  productId           String   @unique
+  authenticityScore   Float
+  handmadeSignals     String   // JSON array
+  machineSignals      String   // JSON array
+  verificationSummary String
+  createdAt           DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model ProductionInsight {
+  id                    String   @id @default(cuid())
+  artisanId             String
+  craftType             String
+  recommendedProducts   String   // JSON array
+  demandSignals         String   // JSON array
+  productionSuggestion  String
+  confidenceScore       Float
+  status                String   @default("new") // new, planned, ignored
+  createdAt             DateTime @default(now())
+
+  artisan ArtisanProfile @relation(fields: [artisanId], references: [id], onDelete: Cascade)
+}
+
+model ArtisanImpact {
+  id                   String   @id @default(cuid())
+  productId            String   @unique
+  artisanId            String
+  estimatedLaborHours  Float
+  artisanFamilyMembers Int
+  craftAgeYears        Int
+  impactSummary        String
+  createdAt            DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
