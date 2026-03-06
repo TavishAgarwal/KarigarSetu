@@ -13,6 +13,48 @@ import { calculateCraftImpact } from '@/lib/impactCalculator';
 import AiCraftGuide from '@/components/AiCraftGuide';
 import CraftOriginMap from '@/components/CraftOriginMap';
 import { getCoordinates } from '@/lib/geocodeLocation';
+import ShareButton from '@/components/ShareButton';
+import WishlistButton from '@/components/WishlistButton';
+import ProductReviews from '@/components/ProductReviews';
+import { ProductJsonLd } from '@/components/JsonLd';
+import Breadcrumb from '@/components/Breadcrumb';
+import ProductViewTracker from '@/components/ProductViewTracker';
+import RecentlyViewed from '@/components/RecentlyViewed';
+import type { Metadata } from 'next';
+
+// Dynamic SEO metadata per product
+export async function generateMetadata({
+    params,
+}: {
+    params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+    const { id } = await params;
+    const product = await prisma.product.findUnique({
+        where: { id },
+        include: { artisan: { include: { user: { select: { name: true } } } } },
+    });
+
+    if (!product) {
+        return { title: 'Product Not Found — KarigarSetu' };
+    }
+
+    return {
+        title: `${product.title} — Handcrafted ${product.category} | KarigarSetu`,
+        description: product.description.substring(0, 160),
+        openGraph: {
+            title: `${product.title} — by ${product.artisan.user.name}`,
+            description: product.description.substring(0, 160),
+            images: [{ url: product.imageUrl, width: 800, height: 800 }],
+            type: 'website',
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title: product.title,
+            description: product.description.substring(0, 160),
+            images: [product.imageUrl],
+        },
+    };
+}
 
 async function getProduct(id: string) {
     const product = await prisma.product.findUnique({
@@ -104,7 +146,29 @@ export default async function ProductDetailPage({
         <div className="min-h-screen bg-white">
             <Navbar />
 
+            {/* JSON-LD Structured Data for SEO */}
+            <ProductJsonLd
+                name={product.title}
+                description={product.description}
+                image={product.imageUrl}
+                price={product.price}
+                artisanName={product.artisan.user.name}
+                category={product.category}
+                availability={product.stock > 0 ? 'InStock' : 'OutOfStock'}
+                url={`https://karigarsetu.com/product/${product.id}`}
+            />
+
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                {/* Breadcrumb Navigation */}
+                <Breadcrumb
+                    items={[
+                        { label: 'Marketplace', href: '/marketplace' },
+                        { label: product.category, href: `/marketplace?category=${encodeURIComponent(product.category)}` },
+                        { label: product.title, href: `/product/${product.id}` },
+                    ]}
+                    className="mb-8"
+                />
+
                 <div className="grid lg:grid-cols-2 gap-12">
                     {/* Left: Image */}
                     <div>
@@ -209,9 +273,19 @@ export default async function ProductDetailPage({
                                 imageUrl={product.imageUrl}
                                 artisanName={product.artisan.user.name}
                             />
-                            <button className="px-6 py-4 border-2 border-gray-200 hover:border-orange-300 text-gray-700 font-semibold rounded-xl transition-all">
-                                ♡
-                            </button>
+                            <WishlistButton
+                                productId={product.id}
+                                title={product.title}
+                                price={product.price}
+                                imageUrl={product.imageUrl}
+                                artisanName={product.artisan.user.name}
+                                variant="button"
+                            />
+                            <ShareButton
+                                title={product.title}
+                                text={`Check out "${product.title}" — handcrafted ${product.category} by ${product.artisan.user.name} on KarigarSetu`}
+                                url={`https://karigarsetu.com/product/${product.id}`}
+                            />
                         </div>
                     </div>
                 </div>
@@ -412,6 +486,9 @@ export default async function ProductDetailPage({
                         productTitle={product.title}
                         craftType={product.category}
                     />
+
+                    {/* Product Reviews */}
+                    <ProductReviews productId={product.id} />
                 </div>
 
                 {/* Related Products */}
@@ -449,6 +526,21 @@ export default async function ProductDetailPage({
                         </div>
                     </div>
                 )}
+            </div>
+
+            {/* Track product view & Recently Viewed section */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+                <ProductViewTracker
+                    product={{
+                        id: product.id,
+                        title: product.title,
+                        price: product.price,
+                        imageUrl: product.imageUrl,
+                        category: product.category,
+                        artisanName: product.artisan.user.name,
+                    }}
+                />
+                <RecentlyViewed excludeId={product.id} maxItems={6} />
             </div>
 
             <Footer />

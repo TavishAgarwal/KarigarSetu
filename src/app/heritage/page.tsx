@@ -1,6 +1,16 @@
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+    title: 'Heritage Explorer — Indian Craft Traditions | KarigarSetu',
+    description: 'Discover the rich heritage of Indian crafts — from Madhubani Painting to Blue Pottery. Learn about centuries-old techniques, cultural significance, and the artisans preserving them.',
+    openGraph: {
+        title: 'Heritage Explorer — Indian Craft Traditions | KarigarSetu',
+        description: 'Explore 10+ traditional Indian craft forms with their history, techniques, and cultural significance.',
+    },
+};
 
 const CRAFT_TRADITIONS = [
     {

@@ -41,19 +41,19 @@ export default function FilterSidebar({
     };
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-8" role="region" aria-label="Product filters">
             <div className="flex items-center gap-2 mb-2">
-                <svg className="h-5 w-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="h-5 w-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                 </svg>
                 <h2 className="text-lg font-bold text-gray-900">Filters</h2>
             </div>
 
             {/* Craft Type */}
-            <div>
-                <h3 className="text-sm font-semibold text-orange-600 uppercase tracking-wider mb-3">
+            <fieldset>
+                <legend className="text-sm font-semibold text-orange-600 uppercase tracking-wider mb-3">
                     Craft Type
-                </h3>
+                </legend>
                 <div className="space-y-2">
                     {CATEGORIES.map((cat) => (
                         <div key={cat} className="flex items-center gap-2">
@@ -69,13 +69,13 @@ export default function FilterSidebar({
                         </div>
                     ))}
                 </div>
-            </div>
+            </fieldset>
 
             {/* Region */}
-            <div>
-                <h3 className="text-sm font-semibold text-orange-600 uppercase tracking-wider mb-3">
+            <fieldset>
+                <legend className="text-sm font-semibold text-orange-600 uppercase tracking-wider mb-3">
                     Region
-                </h3>
+                </legend>
                 <div className="space-y-2">
                     {REGIONS.map((reg) => (
                         <div key={reg} className="flex items-center gap-2">
@@ -91,11 +91,11 @@ export default function FilterSidebar({
                         </div>
                     ))}
                 </div>
-            </div>
+            </fieldset>
 
             {/* Price Range */}
-            <div>
-                <h3 className="text-sm font-semibold text-orange-600 uppercase tracking-wider mb-3">
+            <div role="group" aria-label="Price range filter">
+                <h3 className="text-sm font-semibold text-orange-600 uppercase tracking-wider mb-3" id="price-range-label">
                     Price Range
                 </h3>
                 <Slider
@@ -105,8 +105,9 @@ export default function FilterSidebar({
                     step={500}
                     onValueChange={(value) => onPriceChange([value[0], priceRange[1]])}
                     className="mb-4"
+                    aria-labelledby="price-range-label"
                 />
-                <div className="flex items-center justify-between text-sm text-gray-500">
+                <div className="flex items-center justify-between text-sm text-gray-500" aria-live="polite">
                     <span>₹{priceRange[0].toLocaleString('en-IN')}</span>
                     <span>₹25,000+</span>
                 </div>

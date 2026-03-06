@@ -5,6 +5,44 @@ import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { Badge } from '@/components/ui/badge';
 import { notFound } from 'next/navigation';
+import Breadcrumb from '@/components/Breadcrumb';
+import type { Metadata } from 'next';
+
+// Dynamic SEO metadata per artisan
+export async function generateMetadata({
+    params,
+}: {
+    params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+    const { id } = await params;
+    const artisan = await prisma.artisanProfile.findUnique({
+        where: { id },
+        include: { user: { select: { name: true } } },
+    });
+
+    if (!artisan) {
+        return { title: 'Artisan Not Found — KarigarSetu' };
+    }
+
+    const title = `${artisan.user.name} — ${artisan.craftType} Artisan | KarigarSetu`;
+    const description = `Discover handcrafted ${artisan.craftType} products by ${artisan.user.name} from ${artisan.location}. ${artisan.experienceYears} years of traditional craftsmanship.`;
+
+    return {
+        title,
+        description,
+        openGraph: {
+            title,
+            description,
+            type: 'profile',
+            ...(artisan.profileImage ? { images: [{ url: artisan.profileImage }] } : {}),
+        },
+        twitter: {
+            card: 'summary',
+            title,
+            description,
+        },
+    };
+}
 
 async function getArtisan(id: string) {
     const profile = await prisma.artisanProfile.findUnique({
@@ -37,6 +75,16 @@ export default async function ArtisanProfilePage({
     return (
         <div className="min-h-screen bg-white">
             <Navbar />
+
+            {/* Breadcrumb Navigation */}
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+                <Breadcrumb
+                    items={[
+                        { label: 'Marketplace', href: '/marketplace' },
+                        { label: artisan.user.name, href: `/artisan/${artisan.id}` },
+                    ]}
+                />
+            </div>
 
             {/* Hero Banner */}
             <section className="bg-gradient-to-br from-orange-500 to-orange-600 py-16">

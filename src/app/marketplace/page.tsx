@@ -15,6 +15,8 @@ import {
 } from '@/components/ui/select';
 import { ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { trackSearch } from '@/lib/analytics';
 
 interface Product {
     id: string;
@@ -99,6 +101,28 @@ export default function MarketplacePage() {
         setSearchQuery('');
         searchInputRef.current?.focus();
     };
+
+    // Keyboard shortcuts for marketplace
+    useKeyboardShortcuts([
+        {
+            key: 'k',
+            ctrlOrMeta: true,
+            description: 'Focus search',
+            handler: () => searchInputRef.current?.focus(),
+        },
+        {
+            key: 'Escape',
+            description: 'Clear search',
+            handler: clearSearch,
+        },
+    ]);
+
+    // Track search analytics
+    useEffect(() => {
+        if (debouncedSearch.trim()) {
+            trackSearch(debouncedSearch.trim(), pagination.total);
+        }
+    }, [debouncedSearch, pagination.total]);
 
     return (
         <div className="min-h-screen bg-gray-50">

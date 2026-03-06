@@ -77,6 +77,7 @@ model Product {
   craftAuthenticity CraftAuthenticity?
   artisanImpact   ArtisanImpact?
   orderItems      OrderItem[]
+  reviews         Review[]
 }
 
 model CraftStory {
@@ -205,6 +206,18 @@ model ArtisanImpact {
   craftAgeYears        Int
   impactSummary        String
   createdAt            DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  productId String
+  buyerId   String
+  buyerName String
+  rating    Int      // 1-5 stars
+  comment   String
+  createdAt DateTime @default(now())
 
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 }

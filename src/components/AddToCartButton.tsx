@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useCart } from '@/lib/cart-context';
 import { ShoppingCart, Check } from 'lucide-react';
+import { trackAddToCart } from '@/lib/analytics';
 
 interface AddToCartButtonProps {
     productId: string;
@@ -18,6 +19,7 @@ export default function AddToCartButton({ productId, title, price, imageUrl, art
 
     const handleClick = () => {
         addToCart({ productId, title, price, imageUrl, artisanName });
+        trackAddToCart(productId, title, price);
         setAdded(true);
         setTimeout(() => setAdded(false), 2000);
     };

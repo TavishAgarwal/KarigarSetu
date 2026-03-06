@@ -1,0 +1,82 @@
+/* Print-friendly styles for product pages and order confirmation.
+   Applied only when printing via @media print. */
+
+@media print {
+    /* Hide non-essential UI elements */
+    nav,
+    footer,
+    aside,
+    .no-print,
+    button,
+    [role="navigation"],
+    [aria-label="Main navigation"],
+    [aria-label="Site footer"],
+    [aria-label="Dashboard navigation"] {
+        display: none !important;
+    }
+
+    /* Reset backgrounds and colors for ink-friendly printing */
+    body {
+        background: white !important;
+        color: black !important;
+        font-size: 12pt !important;
+        line-height: 1.5 !important;
+    }
+
+    /* Remove shadows, borders, and gradients */
+    * {
+        box-shadow: none !important;
+        text-shadow: none !important;
+    }
+
+    /* Ensure images print properly */
+    img {
+        max-width: 100% !important;
+        page-break-inside: avoid;
+    }
+
+    /* Ensure product details print on one page if possible */
+    .product-detail {
+        page-break-inside: avoid;
+    }
+
+    /* Show full URLs for links */
+    a[href^="http"]::after {
+        content: " (" attr(href) ")";
+        font-size: 9pt;
+        color: #666;
+        font-weight: normal;
+    }
+
+    /* Hide interactive elements */
+    input,
+    textarea,
+    select,
+    .animate-spin,
+    .animate-pulse {
+        display: none !important;
+    }
+
+    /* Adjust layout for single column */
+    .grid {
+        display: block !important;
+    }
+
+    .grid > * {
+        margin-bottom: 16pt;
+    }
+
+    /* Page margins */
+    @page {
+        margin: 2cm;
+    }
+
+    /* Print header */
+    .print-header {
+        display: block !important;
+        text-align: center;
+        margin-bottom: 24pt;
+        padding-bottom: 12pt;
+        border-bottom: 2pt solid #f97316;
+    }
+}

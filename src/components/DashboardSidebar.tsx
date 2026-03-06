@@ -34,7 +34,7 @@ export default function DashboardSidebar() {
     const { user } = useAuth();
 
     return (
-        <aside className="w-64 bg-white border-r border-gray-100 min-h-screen flex flex-col">
+        <aside className="w-64 bg-white border-r border-gray-100 min-h-screen flex flex-col" aria-label="Dashboard navigation">
             {/* Brand */}
             <div className="p-6 border-b border-gray-100">
                 <Link href="/dashboard" className="flex items-center gap-2">
@@ -51,7 +51,7 @@ export default function DashboardSidebar() {
             </div>
 
             {/* Nav */}
-            <nav className="flex-1 p-4 space-y-1">
+            <nav className="flex-1 p-4 space-y-1" aria-label="Dashboard menu">
                 {navItems.map((item) => {
                     const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
                     const Icon = item.icon;
@@ -60,6 +60,7 @@ export default function DashboardSidebar() {
                         <Link
                             key={item.href}
                             href={item.href}
+                            aria-current={isActive ? 'page' : undefined}
                             className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${isActive
                                 ? 'bg-orange-500 text-white shadow-md shadow-orange-200'
                                 : 'text-gray-600 hover:bg-orange-50 hover:text-orange-600'

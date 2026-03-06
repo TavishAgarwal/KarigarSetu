@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthUser } from '@/lib/auth';
 import { analyzeCraftImage } from '@/lib/gemini';
+import { aiLimiter } from '@/lib/rate-limiter';
 import { readFile } from 'fs/promises';
 import path from 'path';
 
 export async function POST(req: NextRequest) {
+    // Rate limit: 20 AI requests per minute per IP
+    const rateLimited = aiLimiter.check(req);
+    if (rateLimited) return rateLimited;
+
     try {
         const user = await getAuthUser(req);
         if (!user) {

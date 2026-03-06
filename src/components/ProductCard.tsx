@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { Heart, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/lib/cart-context';
+import WishlistButton from '@/components/WishlistButton';
 
 interface ProductCardProps {
     id: string;
@@ -48,8 +49,15 @@ export default function ProductCard({
                     className="object-cover group-hover:scale-105 transition-transform duration-500"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 />
-                <button className="absolute top-3 right-3 w-9 h-9 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-orange-500 hover:text-white transition-all shadow-sm group/heart">
-                    <Heart className="h-4 w-4 text-gray-500 group-hover/heart:text-white" />
+                <button className="absolute top-3 right-3">
+                    <WishlistButton
+                        productId={id}
+                        title={title}
+                        price={price}
+                        imageUrl={imageUrl}
+                        artisanName={artisanName}
+                        variant="icon"
+                    />
                 </button>
                 {category && (
                     <span className="absolute top-3 left-3 px-3 py-1 bg-white/80 backdrop-blur-sm rounded-full text-xs font-medium text-gray-700">

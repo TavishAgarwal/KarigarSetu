@@ -2,8 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { estimateFairPrice } from '@/lib/gemini';
+import { aiLimiter } from '@/lib/rate-limiter';
 
 export async function POST(req: NextRequest) {
+    const rateLimited = aiLimiter.check(req);
+    if (rateLimited) return rateLimited;
+
     try {
         const user = await getAuthUser(req);
         if (!user) {
