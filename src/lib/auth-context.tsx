@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { isFirebaseEnabled } from './featureFlags';
 
 interface User {
     id: string;
@@ -12,10 +13,12 @@ interface User {
 
 interface AuthContextType {
     user: User | null;
+    /** @deprecated Auth is cookie-based. This is a non-null signal for backward compat. */
     token: string | null;
     isLoading: boolean;
     login: (email: string, password: string) => Promise<void>;
     register: (name: string, email: string, password: string, role?: string) => Promise<void>;
+    loginWithGoogle: () => Promise<void>;
     logout: () => void;
 }
 
@@ -23,38 +26,25 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
-    const [token, setToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     // On mount, validate session via cookie-based /api/auth/me
-    // Fall back to localStorage for backward compatibility
     useEffect(() => {
         async function validateSession() {
             try {
-                // Try cookie-based session first
                 const res = await fetch('/api/auth/me');
                 if (res.ok) {
                     const data = await res.json();
                     if (data.user) {
                         setUser(data.user);
-                        // Keep token from localStorage if available (for existing Bearer header fetches)
-                        const savedToken = localStorage.getItem('token');
-                        if (savedToken) setToken(savedToken);
                         setIsLoading(false);
                         return;
                     }
                 }
             } catch {
-                // Cookie session invalid — fall through to localStorage check
+                // Cookie session invalid
             }
 
-            // Fall back to localStorage (for existing sessions before cookie migration)
-            const savedToken = localStorage.getItem('token');
-            const savedUser = localStorage.getItem('user');
-            if (savedToken && savedUser) {
-                setToken(savedToken);
-                setUser(JSON.parse(savedUser));
-            }
             setIsLoading(false);
         }
 
@@ -74,12 +64,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         const data = await res.json();
-        // Server sets httpOnly cookie automatically
-        // Keep token + user in state/localStorage for backward-compatible Bearer header fetches
-        setToken(data.token);
+        // Server sets httpOnly cookie automatically — no localStorage needed
         setUser(data.user);
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
     }, []);
 
     const register = useCallback(async (name: string, email: string, password: string, role = 'artisan') => {
@@ -96,10 +82,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         const data = await res.json();
         // Server sets httpOnly cookie automatically
-        setToken(data.token);
         setUser(data.user);
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
+    }, []);
+
+    const loginWithGoogle = useCallback(async () => {
+        if (!isFirebaseEnabled()) {
+            throw new Error('Google Sign-In is not configured. Please set Firebase environment variables.');
+        }
+
+        // Dynamic import to avoid loading Firebase on pages that don't need it
+        const { getFirebaseAuth, getGoogleProvider } = await import('./firebase');
+        const { signInWithPopup } = await import('firebase/auth');
+
+        const auth = getFirebaseAuth();
+        const provider = getGoogleProvider();
+
+        const result = await signInWithPopup(auth, provider);
+        const idToken = await result.user.getIdToken();
+
+        // Send Firebase token to our backend to create/link user
+        const res = await fetch('/api/auth/firebase', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idToken }),
+        });
+
+        if (!res.ok) {
+            const data = await res.json();
+            throw new Error(data.error || 'Google Sign-In failed');
+        }
+
+        const data = await res.json();
+        setUser(data.user);
     }, []);
 
     const logout = useCallback(async () => {
@@ -109,15 +123,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } catch {
             // Ignore network errors during logout
         }
+
+        // Sign out from Firebase if available
+        if (isFirebaseEnabled()) {
+            try {
+                const { getFirebaseAuth } = await import('./firebase');
+                const { signOut } = await import('firebase/auth');
+                await signOut(getFirebaseAuth());
+            } catch {
+                // Ignore Firebase signout errors
+            }
+        }
+
         // Clear client-side state
-        setToken(null);
         setUser(null);
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
     }, []);
 
+    // Provide a non-null token signal for backward compat (actual auth is cookie-based)
+    const token = user ? 'cookie-auth' : null;
+
     return (
-        <AuthContext.Provider value={{ user, token, isLoading, login, register, logout }}>
+        <AuthContext.Provider value={{ user, token, isLoading, login, register, loginWithGoogle, logout }}>
             {children}
         </AuthContext.Provider>
     );

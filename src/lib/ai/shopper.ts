@@ -1,7 +1,8 @@
 /**
  * AI Personal Shopper — parses buyer intent and generates conversational responses.
+ * Supports streaming responses for chatbot UX when Vertex AI is configured.
  */
-import { getModel, cleanJsonResponse } from './client';
+import { getModel, cleanJsonResponse, generateStreamingContent } from './client';
 
 export interface ShopperIntent {
     budgetMin: number;
@@ -101,4 +102,34 @@ Keep it natural and helpful, like a knowledgeable friend. Use emojis sparingly. 
         }
         return `I couldn't find exact matches for your query right now, but I'd recommend browsing our Marketplace for a wide range of handcrafted treasures. Try searching with different keywords or explore our craft categories!`;
     }
+}
+
+/**
+ * Generate a streaming shopper response for real-time chatbot UX.
+ * Uses Vertex AI streaming when available, falls back to full response.
+ */
+export async function* generateShopperResponseStream(
+    query: string,
+    products: ShopperProduct[]
+): AsyncGenerator<string> {
+    const productList = products.map((p, i) =>
+        `${i + 1}. "${p.title}" — ₹${p.price} (${p.category} by ${p.artisanName}): ${p.description.substring(0, 100)}...`
+    ).join('\n');
+
+    const prompt = `You are a friendly, knowledgeable personal shopper for KarigarSetu, an Indian handcraft marketplace.
+
+The buyer asked: "${query}"
+
+Here are the matching products I found:
+${productList || 'No exact matches found.'}
+
+Write a warm, conversational response (2-4 paragraphs) that:
+1. Acknowledges what they're looking for
+2. Explains why these products are great choices for their needs
+3. Highlights unique handmade qualities and artisan stories
+4. If no products found, suggest what they could search for instead
+
+Keep it natural and helpful, like a knowledgeable friend. Use emojis sparingly. Don't use markdown headers. Keep paragraphs short.`;
+
+    yield* generateStreamingContent(prompt);
 }

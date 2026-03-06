@@ -1,7 +1,15 @@
+/**
+ * Image upload utility with cascading backends:
+ * 1. Google Cloud Storage (if GCS_BUCKET_NAME configured)
+ * 2. Cloudinary (if CLOUDINARY_CLOUD_NAME configured)
+ * 3. Local filesystem (always available as fallback)
+ */
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
+import { isCloudStorageEnabled } from './featureFlags';
 
-// Local file upload fallback when Cloudinary is not configured
+// ─── Local file upload (always-available fallback) ─────────────────────────
+
 export async function uploadImageLocal(file: File): Promise<string> {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
@@ -18,7 +26,8 @@ export async function uploadImageLocal(file: File): Promise<string> {
     return `/uploads/${filename}`;
 }
 
-// Cloudinary upload (when configured)
+// ─── Cloudinary upload ─────────────────────────────────────────────────────
+
 export async function uploadImageCloudinary(file: File): Promise<string> {
     const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
     const apiKey = process.env.CLOUDINARY_API_KEY;
@@ -42,10 +51,34 @@ export async function uploadImageCloudinary(file: File): Promise<string> {
     return data.secure_url;
 }
 
+// ─── Google Cloud Storage upload ───────────────────────────────────────────
+
+async function uploadImageGCS(file: File): Promise<string> {
+    const { uploadToGCS } = await import('./cloudStorage');
+    return uploadToGCS(file, 'products');
+}
+
+// ─── Cascading upload: GCS → Cloudinary → Local ───────────────────────────
+
 export async function uploadImage(file: File): Promise<string> {
-    // Use Cloudinary if configured, otherwise local
-    if (process.env.CLOUDINARY_CLOUD_NAME) {
-        return uploadImageCloudinary(file);
+    // Priority 1: Google Cloud Storage
+    if (isCloudStorageEnabled()) {
+        try {
+            return await uploadImageGCS(file);
+        } catch (error) {
+            console.warn('[Upload] GCS upload failed, trying fallback:', error);
+        }
     }
+
+    // Priority 2: Cloudinary
+    if (process.env.CLOUDINARY_CLOUD_NAME) {
+        try {
+            return await uploadImageCloudinary(file);
+        } catch (error) {
+            console.warn('[Upload] Cloudinary upload failed, trying local:', error);
+        }
+    }
+
+    // Priority 3: Local filesystem
     return uploadImageLocal(file);
 }

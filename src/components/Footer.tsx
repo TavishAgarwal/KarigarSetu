@@ -50,15 +50,18 @@ export default function Footer() {
                         </h3>
                         <ul className="space-y-3">
                             {[
-                                'Artisan Help Center',
-                                'Shipping Policy',
-                                'Terms of Service',
-                                'Privacy Policy',
-                            ].map((label) => (
-                                <li key={label}>
-                                    <a href="#" className="text-gray-400 hover:text-orange-400 transition-colors text-sm">
-                                        {label}
-                                    </a>
+                                { label: 'Artisan Help Center', href: '/help' },
+                                { label: 'Shipping Policy', href: '/shipping' },
+                                { label: 'Terms of Service', href: '/terms' },
+                                { label: 'Privacy Policy', href: '/privacy' },
+                            ].map((link) => (
+                                <li key={link.label}>
+                                    <Link
+                                        href={link.href}
+                                        className="text-gray-400 hover:text-orange-400 transition-colors text-sm"
+                                    >
+                                        {link.label}
+                                    </Link>
                                 </li>
                             ))}
                         </ul>

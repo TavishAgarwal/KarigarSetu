@@ -26,6 +26,7 @@ export function middleware(req: NextRequest) {
         '/api/dashboard',
         '/api/artisan',
         '/api/orders',
+        '/api/admin',
     ];
 
     if (protectedApiPrefixes.some(prefix => pathname.startsWith(prefix))) {
@@ -46,5 +47,7 @@ export const config = {
         '/api/dashboard/:path*',
         '/api/artisan/:path*',
         '/api/orders/:path*',
+        '/api/admin/:path*',
+        '/api/insights/:path*',
     ],
 };

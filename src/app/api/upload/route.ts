@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthUser } from '@/lib/auth';
-import { uploadImageLocal } from '@/lib/cloudinary';
+import { uploadImage } from '@/lib/cloudinary';
 
 export async function POST(req: NextRequest) {
     try {
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const imageUrl = await uploadImageLocal(file);
+        const imageUrl = await uploadImage(file);
 
         return NextResponse.json({ imageUrl });
     } catch (error) {

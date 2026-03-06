@@ -3,18 +3,29 @@
 import dynamic from 'next/dynamic';
 import { MapPin } from 'lucide-react';
 
-// Dynamic import with ssr:false prevents Leaflet SSR crash in Next.js App Router
+// Conditionally load Google Maps or Leaflet based on API key availability
+const isGoogleMapsAvailable = !!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+
 const LeafletMapInner = dynamic(() => import('./LeafletMapInner'), {
     ssr: false,
-    loading: () => (
+    loading: () => <MapLoadingPlaceholder />,
+});
+
+const GoogleMapInner = dynamic(() => import('./GoogleMapInner'), {
+    ssr: false,
+    loading: () => <MapLoadingPlaceholder />,
+});
+
+function MapLoadingPlaceholder() {
+    return (
         <div className="h-[280px] w-full rounded-2xl bg-gray-100 flex items-center justify-center">
             <div className="text-center">
                 <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
                 <p className="text-sm text-gray-500">Loading map…</p>
             </div>
         </div>
-    ),
-});
+    );
+}
 
 interface CraftOriginMapProps {
     location: string;
@@ -56,13 +67,21 @@ export default function CraftOriginMap({
                 </span>
             </div>
 
-            {/* Map */}
+            {/* Map — Google Maps if available, otherwise Leaflet */}
             <div className="rounded-2xl overflow-hidden shadow-sm border border-green-100">
-                <LeafletMapInner
-                    lat={latitude}
-                    lon={longitude}
-                    location={displayLocation}
-                />
+                {isGoogleMapsAvailable ? (
+                    <GoogleMapInner
+                        lat={latitude}
+                        lon={longitude}
+                        location={displayLocation}
+                    />
+                ) : (
+                    <LeafletMapInner
+                        lat={latitude}
+                        lon={longitude}
+                        location={displayLocation}
+                    />
+                )}
             </div>
 
             {/* Legend / caption */}

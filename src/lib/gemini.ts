@@ -44,7 +44,7 @@ export { authenticateCraft, authenticateHandmade } from './ai/authentication';
 export type { CraftProvenanceResult, HandmadeAuthResult } from './ai/authentication';
 
 // ─── Shopper ───────────────────────────────────────────────────────────────
-export { parseShopperIntent, generateShopperResponse } from './ai/shopper';
+export { parseShopperIntent, generateShopperResponse, generateShopperResponseStream } from './ai/shopper';
 export type { ShopperIntent, ShopperProduct } from './ai/shopper';
 
 // ─── Translation ───────────────────────────────────────────────────────────

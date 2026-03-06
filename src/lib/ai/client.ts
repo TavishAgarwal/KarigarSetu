@@ -1,14 +1,112 @@
 /**
- * Shared Gemini AI client and utilities.
+ * Shared AI client and utilities.
  * All AI module files import from here.
+ *
+ * When Vertex AI is configured (GCP_PROJECT_ID set), uses Vertex AI SDK.
+ * Otherwise falls back to the direct @google/generative-ai SDK (existing behavior).
  */
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { isVertexAIEnabled } from '../featureFlags';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+// ─── Lazy imports to avoid loading both SDKs ────────────────────────────────
 
-/** Get a Gemini 2.0 Flash model instance */
-export function getModel() {
-    return genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+let _geminiSDK: typeof import('@google/generative-ai') | null = null;
+let _geminiInstance: InstanceType<typeof import('@google/generative-ai').GoogleGenerativeAI> | null = null;
+
+async function getGeminiSDK() {
+    if (!_geminiSDK) {
+        _geminiSDK = await import('@google/generative-ai');
+    }
+    return _geminiSDK;
+}
+
+async function getGeminiInstance() {
+    if (!_geminiInstance) {
+        const { GoogleGenerativeAI } = await getGeminiSDK();
+        _geminiInstance = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+    }
+    return _geminiInstance;
+}
+
+/**
+ * Unified model interface for both Vertex AI and direct Gemini SDK.
+ * Provides a consistent API regardless of the backing service.
+ */
+export interface UnifiedModel {
+    generateContent(request: string | Array<string | { inlineData: { data: string; mimeType: string } }>): Promise<{
+        response: { text: () => string };
+    }>;
+}
+
+/**
+ * Get a Gemini model instance.
+ * - If Vertex AI is configured → uses Vertex AI SDK
+ * - Otherwise → uses direct @google/generative-ai SDK (existing behavior)
+ */
+export function getModel(): UnifiedModel {
+    if (isVertexAIEnabled()) {
+        return getVertexModelWrapper();
+    }
+    return getDirectGeminiModel();
+}
+
+// ─── Vertex AI Model Wrapper ────────────────────────────────────────────────
+
+function getVertexModelWrapper(): UnifiedModel {
+    // Lazy require to avoid loading Vertex AI SDK when not needed
+    const { getVertexModel, withRetry } = require('./vertexClient');
+    const vertexModel = getVertexModel();
+
+    return {
+        async generateContent(request) {
+            return withRetry(async () => {
+                let parts: Array<{ text: string } | { inlineData: { data: string; mimeType: string } }>;
+
+                if (typeof request === 'string') {
+                    parts = [{ text: request }];
+                } else if (Array.isArray(request)) {
+                    parts = request.map((item) => {
+                        if (typeof item === 'string') return { text: item };
+                        return item;
+                    });
+                } else {
+                    parts = [{ text: String(request) }];
+                }
+
+                const result = await vertexModel.generateContent({
+                    contents: [{ role: 'user', parts }],
+                });
+
+                const response = await result.response;
+                const text = response.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+                return {
+                    response: {
+                        text: () => text,
+                    },
+                };
+            });
+        },
+    };
+}
+
+// ─── Direct Gemini SDK Model (existing behavior) ───────────────────────────
+
+function getDirectGeminiModel(): UnifiedModel {
+    // Synchronous initialization for backward compatibility
+    const { GoogleGenerativeAI } = require('@google/generative-ai');
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+
+    return {
+        async generateContent(request) {
+            const result = await model.generateContent(request);
+            return {
+                response: {
+                    text: () => result.response.text(),
+                },
+            };
+        },
+    };
 }
 
 /**
@@ -20,4 +118,31 @@ export function cleanJsonResponse(text: string): string {
         .replace(/```json\n?/g, '')
         .replace(/```\n?/g, '')
         .trim();
+}
+
+/**
+ * Generate streaming content for chatbot-like responses.
+ * Uses Vertex AI streaming when available, otherwise simulates with full response.
+ */
+export async function* generateStreamingContent(
+    prompt: string
+): AsyncGenerator<string> {
+    if (isVertexAIEnabled()) {
+        const { getVertexModel } = require('./vertexClient');
+        const vertexModel = getVertexModel();
+
+        const streamResult = await vertexModel.generateContentStream({
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        });
+
+        for await (const chunk of streamResult.stream) {
+            const text = chunk.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (text) yield text;
+        }
+    } else {
+        // Fallback: generate full response and yield it as a single chunk
+        const model = getModel();
+        const result = await model.generateContent(prompt);
+        yield result.response.text();
+    }
 }

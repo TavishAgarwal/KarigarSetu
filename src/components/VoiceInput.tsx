@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Mic, MicOff, Globe } from 'lucide-react';
+import { Mic, MicOff, Globe, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     Select,
@@ -42,6 +42,8 @@ export default function VoiceInput({ onTranscript, onAudioRecorded, placeholder,
     const [supported, setSupported] = useState(true);
     const [networkError, setNetworkError] = useState(false);
     const [audioSaved, setAudioSaved] = useState(false);
+    const [isTranscribing, setIsTranscribing] = useState(false);
+    const [serverTranscript, setServerTranscript] = useState('');
     const recognitionRef = useRef<SpeechRecognition | null>(null);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
@@ -53,10 +55,44 @@ export default function VoiceInput({ onTranscript, onAudioRecorded, placeholder,
         }
     }, []);
 
+    /**
+     * Send recorded audio to Google Cloud Speech-to-Text API.
+     * Falls back gracefully if the API is not configured.
+     */
+    const transcribeWithServer = useCallback(async (audioBlob: Blob, lang: string): Promise<string | null> => {
+        try {
+            setIsTranscribing(true);
+            const formData = new FormData();
+            formData.append('audio', audioBlob, 'recording.webm');
+            formData.append('language', lang);
+            formData.append('autoDetect', 'true');
+
+            const res = await fetch('/api/ai/speech-to-text', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!res.ok) {
+                // 503 = Speech-to-Text not configured — not an error
+                if (res.status === 503) return null;
+                throw new Error(`STT failed: ${res.status}`);
+            }
+
+            const data = await res.json();
+            return data.text || null;
+        } catch (error) {
+            console.warn('[VoiceInput] Server transcription failed:', error);
+            return null;
+        } finally {
+            setIsTranscribing(false);
+        }
+    }, []);
+
     const startRecording = useCallback(async () => {
         setNetworkError(false);
         setAudioSaved(false);
         setTranscript('');
+        setServerTranscript('');
 
         // Always start MediaRecorder to capture raw audio
         try {
@@ -133,13 +169,26 @@ export default function VoiceInput({ onTranscript, onAudioRecorded, placeholder,
 
         // Stop MediaRecorder and save audio blob
         if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-            mediaRecorderRef.current.onstop = () => {
+            mediaRecorderRef.current.onstop = async () => {
                 const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
 
                 // Always emit the audio for offline storage
                 if (onAudioRecorded && audioBlob.size > 0) {
                     onAudioRecorded(audioBlob, language);
                     setAudioSaved(true);
+                }
+
+                // Try server-side transcription (Google Cloud Speech-to-Text)
+                if (audioBlob.size > 0) {
+                    const sttResult = await transcribeWithServer(audioBlob, language);
+                    if (sttResult) {
+                        setServerTranscript(sttResult);
+                        // If browser SpeechRecognition didn't produce a result, use server result
+                        if (!transcript) {
+                            setTranscript(sttResult);
+                            onTranscript(sttResult);
+                        }
+                    }
                 }
 
                 // Stop all tracks from the stream
@@ -156,7 +205,7 @@ export default function VoiceInput({ onTranscript, onAudioRecorded, placeholder,
         if (transcript) {
             onTranscript(transcript);
         }
-    }, [transcript, onTranscript, onAudioRecorded, language]);
+    }, [transcript, onTranscript, onAudioRecorded, language, transcribeWithServer]);
 
     const toggleRecording = () => {
         if (isRecording) {
@@ -165,6 +214,9 @@ export default function VoiceInput({ onTranscript, onAudioRecorded, placeholder,
             startRecording();
         }
     };
+
+    // Use server transcript if available and better than browser transcript
+    const displayTranscript = serverTranscript || transcript;
 
     if (!supported) {
         return (
@@ -202,12 +254,17 @@ export default function VoiceInput({ onTranscript, onAudioRecorded, placeholder,
                 <button
                     type="button"
                     onClick={toggleRecording}
+                    disabled={isTranscribing}
                     className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 transition-all shadow-lg ${isRecording
                         ? 'bg-red-500 hover:bg-red-600 shadow-red-200 animate-pulse'
-                        : 'bg-orange-500 hover:bg-orange-600 shadow-orange-200'
+                        : isTranscribing
+                            ? 'bg-orange-300 shadow-orange-100 cursor-wait'
+                            : 'bg-orange-500 hover:bg-orange-600 shadow-orange-200'
                         }`}
                 >
-                    {isRecording ? (
+                    {isTranscribing ? (
+                        <Loader2 className="h-7 w-7 text-white animate-spin" />
+                    ) : isRecording ? (
                         <MicOff className="h-7 w-7 text-white" />
                     ) : (
                         <Mic className="h-7 w-7 text-white" />
@@ -215,7 +272,11 @@ export default function VoiceInput({ onTranscript, onAudioRecorded, placeholder,
                 </button>
 
                 <p className="font-medium text-gray-800">
-                    {isRecording ? '🔴 Recording... Tap to stop' : placeholder || 'Tap to speak'}
+                    {isTranscribing
+                        ? '🔄 Transcribing with AI...'
+                        : isRecording
+                            ? '🔴 Recording... Tap to stop'
+                            : placeholder || 'Tap to speak'}
                 </p>
 
                 {isRecording && (
@@ -233,12 +294,12 @@ export default function VoiceInput({ onTranscript, onAudioRecorded, placeholder,
                     </div>
                 )}
 
-                {transcript && (
+                {displayTranscript && (
                     <div className="mt-4 bg-white rounded-xl p-3 text-left">
                         <p className="text-xs font-semibold text-orange-600 uppercase tracking-wider mb-1">
-                            Transcript
+                            {serverTranscript ? '🤖 AI Transcript' : 'Transcript'}
                         </p>
-                        <p className="text-sm text-gray-700">{transcript}</p>
+                        <p className="text-sm text-gray-700">{displayTranscript}</p>
                     </div>
                 )}
             </div>
@@ -263,13 +324,14 @@ export default function VoiceInput({ onTranscript, onAudioRecorded, placeholder,
                 </div>
             )}
 
-            {transcript && !isRecording && (
+            {displayTranscript && !isRecording && !isTranscribing && (
                 <Button
                     type="button"
                     variant="outline"
                     onClick={() => {
-                        onTranscript(transcript);
+                        onTranscript(displayTranscript);
                         setTranscript('');
+                        setServerTranscript('');
                     }}
                     className="w-full rounded-xl border-orange-300 text-orange-600 hover:bg-orange-50"
                 >

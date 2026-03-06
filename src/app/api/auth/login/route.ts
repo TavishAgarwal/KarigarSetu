@@ -34,6 +34,14 @@ export async function POST(req: NextRequest) {
             );
         }
 
+        // Reject login for accounts that only have Google Sign-In (empty password hash)
+        if (!user.password) {
+            return NextResponse.json(
+                { error: 'This account uses Google Sign-In. Please log in with Google.' },
+                { status: 401 }
+            );
+        }
+
         const isValid = await verifyPassword(password, user.password);
         if (!isValid) {
             return NextResponse.json(
@@ -49,7 +57,6 @@ export async function POST(req: NextRequest) {
         });
 
         const response = NextResponse.json({
-            token,
             user: {
                 id: user.id,
                 name: user.name,

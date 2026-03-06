@@ -50,7 +50,6 @@ export async function POST(req: NextRequest) {
 
         const response = NextResponse.json(
             {
-                token,
                 user: {
                     id: user.id,
                     name: user.name,

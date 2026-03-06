@@ -10,12 +10,20 @@
     "prisma:seed": "npx tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@google-cloud/bigquery": "^8.1.1",
+    "@google-cloud/speech": "^7.3.0",
+    "@google-cloud/storage": "^7.19.0",
+    "@google-cloud/translate": "^9.3.0",
+    "@google-cloud/vertexai": "^1.10.0",
     "@google/generative-ai": "^0.24.1",
+    "@googlemaps/js-api-loader": "^2.0.2",
     "@prisma/client": "^5.22.0",
     "@types/leaflet": "^1.9.21",
     "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "firebase": "^12.10.0",
+    "firebase-admin": "^13.7.0",
     "jsonwebtoken": "^9.0.3",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.577.0",
@@ -27,6 +35,7 @@
     "react-dom": "19.2.3",
     "react-leaflet": "^5.0.0",
     "recharts": "^3.7.0",
+    "sharp": "^0.34.5",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.5.0",
     "zod": "^4.3.6"

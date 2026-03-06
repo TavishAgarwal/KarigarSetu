@@ -70,13 +70,20 @@ Every listing and every purchase creates measurable social change — from artis
 | **Language** | [TypeScript 5](https://www.typescriptlang.org/) |
 | **Styling** | [Tailwind CSS 4](https://tailwindcss.com/) + [Radix UI](https://www.radix-ui.com/) + [shadcn/ui](https://ui.shadcn.com/) |
 | **Database** | [SQLite](https://www.sqlite.org/) via [Prisma ORM](https://www.prisma.io/) |
-| **AI Engine** | [Google Gemini API](https://ai.google.dev/) (15 AI functions) |
-| **Authentication** | JWT ([jsonwebtoken](https://github.com/auth0/node-jsonwebtoken)) + [bcryptjs](https://github.com/dcodeIO/bcrypt.js) |
-| **Maps** | [Leaflet](https://leafletjs.com/) + [react-leaflet](https://react-leaflet.js.org/) |
+| **AI Engine** | [Vertex AI](https://cloud.google.com/vertex-ai) (Gemini) with [direct Gemini SDK](https://ai.google.dev/) fallback |
+| **Authentication** | JWT + [Firebase Auth](https://firebase.google.com/auth) (Google Sign-In) |
+| **Real-time Data** | [Cloud Firestore](https://firebase.google.com/firestore) (orders, messaging, notifications) |
+| **Storage** | [Cloud Storage](https://cloud.google.com/storage) → [Cloudinary](https://cloudinary.com/) → Local (cascading) |
+| **Analytics** | [BigQuery](https://cloud.google.com/bigquery) with Prisma aggregation fallback |
+| **Voice** | [Cloud Speech-to-Text](https://cloud.google.com/speech-to-text) + browser API fallback |
+| **Translation** | [Cloud Translate API](https://cloud.google.com/translate) + Gemini AI fallback |
+| **Maps** | [Google Maps Platform](https://developers.google.com/maps) + [Leaflet](https://leafletjs.com/) fallback |
+| **Serverless** | [Cloud Functions](https://cloud.google.com/functions) for AI pipelines |
 | **Charts** | [Recharts](https://recharts.org/) |
-| **Image Upload** | [Cloudinary](https://cloudinary.com/) (optional, falls back to local) |
 | **Offline** | Custom Service Worker + IndexedDB queue |
-| **Notifications** | [Sonner](https://sonner.emilkowal.dev/) |
+| **Notifications** | [Sonner](https://sonner.emilkowal.dev/) + Firebase Cloud Messaging |
+
+> **Note**: All Google Cloud services are optional — the app works identically without them using built-in fallbacks.
 
 ---
 
@@ -118,7 +125,7 @@ Every listing and every purchase creates measurable social change — from artis
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-username/KarigarSetu.git
+git clone https://github.com/TavishAgarwal/KarigarSetu.git
 cd KarigarSetu
 
 # 2. Install dependencies

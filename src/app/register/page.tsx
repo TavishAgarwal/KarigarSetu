@@ -87,9 +87,9 @@ export default function RegisterPage() {
                                     type="password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="Min 6 characters"
+                                    placeholder="Min 8 characters"
                                     className="rounded-xl h-12"
-                                    minLength={6}
+                                    minLength={8}
                                     required
                                 />
                             </div>
@@ -102,8 +102,8 @@ export default function RegisterPage() {
                                         type="button"
                                         onClick={() => setRole('artisan')}
                                         className={`p-4 rounded-xl border-2 text-center transition-all ${role === 'artisan'
-                                                ? 'border-orange-500 bg-orange-50 text-orange-700'
-                                                : 'border-gray-200 text-gray-600 hover:border-orange-200'
+                                            ? 'border-orange-500 bg-orange-50 text-orange-700'
+                                            : 'border-gray-200 text-gray-600 hover:border-orange-200'
                                             }`}
                                     >
                                         <span className="text-2xl block mb-1">🎨</span>
@@ -113,8 +113,8 @@ export default function RegisterPage() {
                                         type="button"
                                         onClick={() => setRole('buyer')}
                                         className={`p-4 rounded-xl border-2 text-center transition-all ${role === 'buyer'
-                                                ? 'border-orange-500 bg-orange-50 text-orange-700'
-                                                : 'border-gray-200 text-gray-600 hover:border-orange-200'
+                                            ? 'border-orange-500 bg-orange-50 text-orange-700'
+                                            : 'border-gray-200 text-gray-600 hover:border-orange-200'
                                             }`}
                                     >
                                         <span className="text-2xl block mb-1">🛒</span>

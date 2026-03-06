@@ -96,3 +96,21 @@ export function verifyAuthCookie(req: NextRequest): { userId: string; email: str
     if (!cookieToken) return null;
     return verifyToken(cookieToken);
 }
+
+/**
+ * Require the authenticated user to have the 'admin' role.
+ * Returns the user if authorized, or a 403 NextResponse if not.
+ */
+export async function requireAdmin(req: NextRequest): Promise<
+    { user: NonNullable<Awaited<ReturnType<typeof getAuthUser>>> } |
+    { error: NextResponse }
+> {
+    const user = await getAuthUser(req);
+    if (!user) {
+        return { error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) };
+    }
+    if (user.role !== 'admin') {
+        return { error: NextResponse.json({ error: 'Forbidden: admin access required' }, { status: 403 }) };
+    }
+    return { user };
+}

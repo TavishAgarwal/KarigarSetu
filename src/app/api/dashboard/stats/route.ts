@@ -31,8 +31,17 @@ export async function GET(req: NextRequest) {
 
         const products = profile.products;
         const totalProducts = products.length;
-        const totalRevenue = products.reduce((sum, p) => sum + p.price, 0);
         const totalStock = products.reduce((sum, p) => sum + p.stock, 0);
+
+        // Calculate actual revenue from confirmed/delivered orders
+        const revenueResult = await prisma.order.aggregate({
+            where: {
+                artisanId: profile.id,
+                status: { in: ['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED'] },
+            },
+            _sum: { totalAmount: true },
+        });
+        const totalRevenue = revenueResult._sum.totalAmount || 0;
 
         // Compute weekly product creation counts (last 7 days)
         const now = new Date();

@@ -6,7 +6,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useCart } from '@/lib/cart-context';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Menu, X, LayoutDashboard, LogOut, User, ChevronDown, ShoppingCart, Sparkles, Heart } from 'lucide-react';
+import { Menu, X, LayoutDashboard, LogOut, User, ChevronDown, ShoppingCart, Sparkles, Heart, Package } from 'lucide-react';
 
 export default function Navbar() {
     const { user, logout } = useAuth();
@@ -40,7 +40,7 @@ export default function Navbar() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
                     {/* Logo */}
-                    <Link href="/" className="flex items-center gap-2">
+                    <Link href="/" className="flex items-center gap-2" aria-label="KarigarSetu Home">
                         <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
                             <span className="text-white font-bold text-sm">K</span>
                         </div>
@@ -67,15 +67,21 @@ export default function Navbar() {
                         {user ? (
                             <>
                                 {isBuyer ? (
-                                    <Link href="/cart" className={buttonVariants({ variant: "outline", className: "gap-2 rounded-xl border-gray-200 hover:border-orange-300 hover:bg-orange-50 relative" })}>
-                                        <ShoppingCart className="h-4 w-4" />
-                                        Cart
-                                        {cartCount > 0 && (
-                                            <span className="absolute -top-2 -right-2 w-5 h-5 bg-orange-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                                                {cartCount > 99 ? '99+' : cartCount}
-                                            </span>
-                                        )}
-                                    </Link>
+                                    <>
+                                        <Link href="/cart" className={buttonVariants({ variant: "outline", className: "gap-2 rounded-xl border-gray-200 hover:border-orange-300 hover:bg-orange-50 relative" })}>
+                                            <ShoppingCart className="h-4 w-4" />
+                                            Cart
+                                            {cartCount > 0 && (
+                                                <span className="absolute -top-2 -right-2 w-5 h-5 bg-orange-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                                                    {cartCount > 99 ? '99+' : cartCount}
+                                                </span>
+                                            )}
+                                        </Link>
+                                        <Link href="/dashboard/buyer-orders" className={buttonVariants({ variant: "outline", className: "gap-2 rounded-xl border-gray-200 hover:border-orange-300 hover:bg-orange-50" })}>
+                                            <Package className="h-4 w-4" />
+                                            My Orders
+                                        </Link>
+                                    </>
                                 ) : (
                                     <Link href="/dashboard" className={buttonVariants({ variant: "outline", className: "gap-2 rounded-xl border-gray-200 hover:border-orange-300 hover:bg-orange-50" })}>
                                         <LayoutDashboard className="h-4 w-4" />
@@ -145,6 +151,7 @@ export default function Navbar() {
                     <button
                         className="md:hidden p-2"
                         onClick={() => setMenuOpen(!menuOpen)}
+                        aria-label="Toggle menu"
                     >
                         {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
                     </button>

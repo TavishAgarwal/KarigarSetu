@@ -9,6 +9,15 @@ export async function DELETE(req: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
+        // Require email confirmation to prevent accidental deletion
+        const body = await req.json().catch(() => ({}));
+        if (!body.confirmEmail || body.confirmEmail !== user.email) {
+            return NextResponse.json(
+                { error: 'Please confirm your email address to delete your account' },
+                { status: 400 }
+            );
+        }
+
         // Delete user and all related data (cascade configured in schema)
         await prisma.user.delete({
             where: { id: user.id },
