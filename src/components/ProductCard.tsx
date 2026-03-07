@@ -49,7 +49,7 @@ export default function ProductCard({
                     className="object-cover group-hover:scale-105 transition-transform duration-500"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 />
-                <button className="absolute top-3 right-3">
+                <div className="absolute top-3 right-3">
                     <WishlistButton
                         productId={id}
                         title={title}
@@ -58,7 +58,7 @@ export default function ProductCard({
                         artisanName={artisanName}
                         variant="icon"
                     />
-                </button>
+                </div>
                 {category && (
                     <span className="absolute top-3 left-3 px-3 py-1 bg-white/80 backdrop-blur-sm rounded-full text-xs font-medium text-gray-700">
                         {category}
@@ -103,8 +103,8 @@ export default function ProductCard({
                         variant="outline"
                         onClick={handleAddToCart}
                         className={`rounded-lg text-xs transition-all ${added
-                                ? 'border-green-500 text-green-600 bg-green-50'
-                                : 'border-orange-500 text-orange-600 hover:bg-orange-500 hover:text-white'
+                            ? 'border-green-500 text-green-600 bg-green-50'
+                            : 'border-orange-500 text-orange-600 hover:bg-orange-500 hover:text-white'
                             }`}
                     >
                         {added ? (
