@@ -10,7 +10,6 @@ import {
     Send,
     Star,
     Clock,
-    Check,
     CheckCheck,
     Smile,
     MessageCircle,

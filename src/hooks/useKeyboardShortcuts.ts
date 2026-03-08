@@ -27,7 +27,9 @@ interface ShortcutConfig {
  */
 export function useKeyboardShortcuts(shortcuts: ShortcutConfig[]) {
     const shortcutsRef = useRef(shortcuts);
-    shortcutsRef.current = shortcuts;
+    useEffect(() => {
+        shortcutsRef.current = shortcuts;
+    });
 
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
         // Ignore when typing in inputs, textareas, or contenteditable
@@ -66,7 +68,7 @@ export function useKeyboardShortcuts(shortcuts: ShortcutConfig[]) {
  * Pre-built shortcut configs for common marketplace actions.
  */
 export const MARKETPLACE_SHORTCUTS: ShortcutConfig[] = [
-    { key: 'k', ctrlOrMeta: true, handler: () => {}, description: 'Open search' },
-    { key: '/', handler: () => {}, description: 'Focus search bar' },
-    { key: 'Escape', handler: () => {}, description: 'Close modal / dialog' },
+    { key: 'k', ctrlOrMeta: true, handler: () => { }, description: 'Open search' },
+    { key: '/', handler: () => { }, description: 'Focus search bar' },
+    { key: 'Escape', handler: () => { }, description: 'Close modal / dialog' },
 ];

@@ -1,6 +1,6 @@
 'use client';
 
-import { Globe, Palette, ShoppingBag, TrendingUp, Lightbulb, MapPin, IndianRupee } from 'lucide-react';
+import { Globe, Palette, ShoppingBag, Lightbulb, MapPin, IndianRupee } from 'lucide-react';
 
 interface Region {
     region: string;

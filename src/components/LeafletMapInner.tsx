@@ -17,7 +17,7 @@ const fixLeafletIcons = () => {
 };
 
 // Custom orange marker for craft origin
-const craftMarker = (lat: number, lon: number) => {
+const craftMarker = (_lat: number, _lon: number) => {
     if (typeof window === 'undefined') return null;
     return L.divIcon({
         html: `

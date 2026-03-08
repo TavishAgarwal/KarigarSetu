@@ -13,8 +13,8 @@ export default function NotFound() {
                     </div>
                     <h1 className="text-4xl font-bold text-gray-900 mb-3">Page Not Found</h1>
                     <p className="text-gray-500 mb-8 text-lg">
-                        The page you're looking for doesn't exist or has been moved.
-                        Let's get you back to exploring beautiful artisan crafts.
+                        The page you&apos;re looking for doesn&apos;t exist or has been moved.
+                        Let&apos;s get you back to exploring beautiful artisan crafts.
                     </p>
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                         <Link

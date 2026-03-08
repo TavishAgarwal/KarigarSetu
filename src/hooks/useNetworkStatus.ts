@@ -11,15 +11,14 @@ interface NetworkStatus {
  * Returns `{ isOnline: true }` by default for SSR safety.
  */
 export function useNetworkStatus(): NetworkStatus {
-    const [isOnline, setIsOnline] = useState(true);
+    const [isOnline, setIsOnline] = useState(() =>
+        typeof navigator !== 'undefined' ? navigator.onLine : true
+    );
 
     const handleOnline = useCallback(() => setIsOnline(true), []);
     const handleOffline = useCallback(() => setIsOnline(false), []);
 
     useEffect(() => {
-        // Set initial value from browser
-        setIsOnline(navigator.onLine);
-
         window.addEventListener('online', handleOnline);
         window.addEventListener('offline', handleOffline);
 

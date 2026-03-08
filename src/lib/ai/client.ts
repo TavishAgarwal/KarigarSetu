@@ -7,25 +7,6 @@
  */
 import { isVertexAIEnabled } from '../featureFlags';
 
-// ─── Lazy imports to avoid loading both SDKs ────────────────────────────────
-
-let _geminiSDK: typeof import('@google/generative-ai') | null = null;
-let _geminiInstance: InstanceType<typeof import('@google/generative-ai').GoogleGenerativeAI> | null = null;
-
-async function getGeminiSDK() {
-    if (!_geminiSDK) {
-        _geminiSDK = await import('@google/generative-ai');
-    }
-    return _geminiSDK;
-}
-
-async function getGeminiInstance() {
-    if (!_geminiInstance) {
-        const { GoogleGenerativeAI } = await getGeminiSDK();
-        _geminiInstance = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-    }
-    return _geminiInstance;
-}
 
 /**
  * Unified model interface for both Vertex AI and direct Gemini SDK.
@@ -52,12 +33,11 @@ export function getModel(): UnifiedModel {
 // ─── Vertex AI Model Wrapper ────────────────────────────────────────────────
 
 function getVertexModelWrapper(): UnifiedModel {
-    // Lazy require to avoid loading Vertex AI SDK when not needed
-    const { getVertexModel, withRetry } = require('./vertexClient');
-    const vertexModel = getVertexModel();
-
     return {
         async generateContent(request) {
+            // Lazy dynamic import to avoid loading Vertex AI SDK when not needed
+            const { getVertexModel, withRetry } = await import('./vertexClient');
+            const vertexModel = getVertexModel();
             return withRetry(async () => {
                 let parts: Array<{ text: string } | { inlineData: { data: string; mimeType: string } }>;
 
@@ -92,13 +72,12 @@ function getVertexModelWrapper(): UnifiedModel {
 // ─── Direct Gemini SDK Model (existing behavior) ───────────────────────────
 
 function getDirectGeminiModel(): UnifiedModel {
-    // Synchronous initialization for backward compatibility
-    const { GoogleGenerativeAI } = require('@google/generative-ai');
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-
     return {
         async generateContent(request) {
+            // Dynamic import for ESLint compliance
+            const { GoogleGenerativeAI } = await import('@google/generative-ai');
+            const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+            const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
             const result = await model.generateContent(request);
             return {
                 response: {
@@ -128,7 +107,7 @@ export async function* generateStreamingContent(
     prompt: string
 ): AsyncGenerator<string> {
     if (isVertexAIEnabled()) {
-        const { getVertexModel } = require('./vertexClient');
+        const { getVertexModel } = await import('./vertexClient');
         const vertexModel = getVertexModel();
 
         const streamResult = await vertexModel.generateContentStream({

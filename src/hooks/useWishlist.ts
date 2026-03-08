@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 
 const STORAGE_KEY = 'karigarsetu_wishlist';
 
@@ -33,12 +33,7 @@ function persistWishlist(items: WishlistItem[]) {
  * Works without authentication — persists across sessions.
  */
 export function useWishlist() {
-    const [items, setItems] = useState<WishlistItem[]>([]);
-
-    // Load on mount
-    useEffect(() => {
-        setItems(loadWishlist());
-    }, []);
+    const [items, setItems] = useState<WishlistItem[]>(() => loadWishlist());
 
     const addToWishlist = useCallback((item: Omit<WishlistItem, 'addedAt'>) => {
         setItems((prev) => {

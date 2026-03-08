@@ -37,9 +37,6 @@ const CRAFT_HERITAGE_MAP: Record<string, number> = {
 /** Average daily wage for skilled artisans (INR) */
 const AVG_DAILY_WAGE = 500;
 
-/** Average artisan family size in rural India */
-const DEFAULT_FAMILY_MEMBERS = 4;
-
 /** Labor hour multipliers based on material/technique complexity */
 const COMPLEXITY_MULTIPLIERS: Record<string, number> = {
     silk: 1.8,

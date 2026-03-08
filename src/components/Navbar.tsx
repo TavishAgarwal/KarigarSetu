@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useCart } from '@/lib/cart-context';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import { Menu, X, LayoutDashboard, LogOut, User, ChevronDown, ShoppingCart, Sparkles, Heart, Package } from 'lucide-react';
 
 export default function Navbar() {

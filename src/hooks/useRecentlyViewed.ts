@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 
 const STORAGE_KEY = 'karigarsetu_recently_viewed';
 const MAX_ITEMS = 12;
@@ -35,11 +35,7 @@ function persistRecentlyViewed(items: RecentlyViewedItem[]) {
  * Stores the last 12 viewed products for display in "Recently Viewed" sections.
  */
 export function useRecentlyViewed() {
-    const [items, setItems] = useState<RecentlyViewedItem[]>([]);
-
-    useEffect(() => {
-        setItems(loadRecentlyViewed());
-    }, []);
+    const [items, setItems] = useState<RecentlyViewedItem[]>(() => loadRecentlyViewed());
 
     const addView = useCallback((item: Omit<RecentlyViewedItem, 'viewedAt'>) => {
         setItems((prev) => {

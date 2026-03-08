@@ -5,13 +5,12 @@ import { useDashboardData } from '@/hooks/useDashboardData';
 import DashboardSidebar from '@/components/DashboardSidebar';
 import StatsCard from '@/components/StatsCard';
 import OfflineQueueStatus from '@/components/OfflineQueueStatus';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
     TrendingUp,
     Eye,
-    Mail,
     Sparkles,
     FileEdit,
     Plus,

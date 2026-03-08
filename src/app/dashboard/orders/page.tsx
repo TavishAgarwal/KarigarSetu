@@ -99,7 +99,7 @@ export default function OrdersPage() {
         } finally {
             setLoading(false);
         }
-    }, [token, activeTab, page, historyStatus, dateFrom, dateTo, refreshKey]);
+    }, [token, activeTab, page, historyStatus, dateFrom, dateTo]);
 
     // Initial + tab change fetch
     useEffect(() => {

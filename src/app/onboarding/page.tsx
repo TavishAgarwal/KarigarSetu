@@ -21,7 +21,6 @@ import {
     X, Check, Pencil, MapPin, Briefcase, Clock, FileText,
     ChevronRight, ChevronLeft, Palette, Camera, Package, Truck,
     CreditCard, Sparkles, Loader2, Mic, Factory, Globe,
-    Image as ImageIcon,
 } from 'lucide-react';
 
 // ─── All Indian States & Union Territories ───
@@ -242,7 +241,6 @@ function OnboardingContent() {
                 // ignore
             }
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isEditMode, token]);
 
     // Persist to sessionStorage on form change

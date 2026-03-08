@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const { uid, email, name, picture } = decoded;
+        const { uid, email, name } = decoded;
 
         if (!email) {
             return NextResponse.json(
