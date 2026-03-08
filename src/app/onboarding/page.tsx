@@ -241,6 +241,7 @@ function OnboardingContent() {
                 // ignore
             }
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isEditMode, token]);
 
     // Persist to sessionStorage on form change

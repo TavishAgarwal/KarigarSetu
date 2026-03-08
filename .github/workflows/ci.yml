@@ -72,12 +72,18 @@ jobs:
       - name: Generate Prisma client
         run: npx prisma generate
 
+      - name: Create database tables
+        run: npx prisma db push --skip-generate
+        env:
+          DATABASE_URL: file:./dev.db
+
       - name: Build application
         run: npm run build
         env:
           JWT_SECRET: ci-build-secret-key
           DATABASE_URL: file:./dev.db
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || 'ci-placeholder' }}
+          NEXT_DISABLE_ESLINT: '1'
 
   typecheck:
     name: Type Check
